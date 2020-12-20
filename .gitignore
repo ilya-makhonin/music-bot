@@ -4,3 +4,4 @@ dist/
 bundle/
 package-lock.json
 config.*
+!Config.ts

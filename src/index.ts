@@ -1,6 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api'
 import {
-    ConstructorOptions,
     Message,
 } from 'node-telegram-bot-api'
 import {
@@ -8,68 +7,69 @@ import {
     getRandomChord,
     getRandomOctave,
 } from './common/Util'
+import {
+    token,
+    options,
+} from './common/Config'
 import { Enums } from './types'
 
 
-const token: string = ''
-const options: ConstructorOptions = {
-    polling: true,
-}
-
 const bot: TelegramBot = new TelegramBot(token, options)
 
-let interval: NodeJS.Timeout | undefined
-let period: number = 2000
-let chordType: Enums.ChordType = 'Major'
-let isUseOctave: boolean = false
-let isSending: boolean = false
+let cache: Enums.ICache = {
+    interval: undefined,
+    period: 2000,
+    chordType: 'Major',
+    isUseOctave: false,
+    isSending: false,
+}
 
 
 bot.onText(/\/start/, (msg: Message, match: RegExpExecArray) => {
-    if (isSending) return
+    if (cache.isSending) return
 
     const chatId: number = msg.chat.id
-    const chordList: string[] = getChordList(chordType)
+    const chordList: string[] = getChordList(cache.chordType)
 
-    isSending = true
+    cache.isSending = true
     
-    interval = setInterval(
-        () => bot.sendMessage(chatId, getRandomChord(chordList, isUseOctave ? getRandomOctave : null)),
-        period,
+    cache.interval = setInterval(
+        () => bot.sendMessage(chatId, getRandomChord(chordList, cache.isUseOctave ? getRandomOctave : null)),
+        cache.period,
     ) 
 })
 
 bot.onText(/\/stop/, (msg: Message, match: RegExpExecArray) => {
-    isSending = false
-    clearInterval(interval)
+    cache.isSending = false
+    clearInterval(cache.interval)
 })
 
 bot.onText(/\/tempo ([0-9]{4,5})/, (msg: Message, match: RegExpExecArray) => {
-    if (isSending) return
+    if (cache.isSending) return
     const chatId: number = msg.chat.id
-    period = match[1] ? parseInt(match[1]) : period
+    cache.period = match[1] ? parseInt(match[1]) : cache.period
 
-    bot.sendMessage(chatId, 'Темп ' + period.toString())
+    bot.sendMessage(chatId, 'Темп ' + cache.period.toString())
 })
 
 bot.onText(/\/chord (.+)/, (msg: Message, match: RegExpExecArray) => {
-    if (isSending) return
+    if (cache.isSending) return
     const chatId: number = msg.chat.id
-    chordType = match[1] === 'all'
+    cache.chordType = match[1] === 'all'
         ? 'All'
             : match[1] === 'minor'
                 ? 'Minor'
                     : 'Major'
 
-    bot.sendMessage(chatId, `Установлены ${chordType === 'All' ? 'все' : chordType === 'Major' ? 'мажорные' : 'минорные'} аккорды`)
+    bot.sendMessage(chatId, `Установлены ${cache.chordType === 'All' ? 'все' : cache.chordType === 'Major' ? 'мажорные' : 'минорные'} аккорды`)
 })
 
 bot.onText(/\/octave/, (msg: Message, match: RegExpExecArray) => {
-    if (isSending) return
+    if (cache.isSending) return
     const chatId: number = msg.chat.id
-    isUseOctave = !isUseOctave
+    cache.isUseOctave = !cache.isUseOctave
 
-    bot.sendMessage(chatId, isUseOctave ? 'Используем октавы' : 'Октавы отключены')
+    bot.sendMessage(chatId, cache.isUseOctave ? 'Используем октавы' : 'Октавы отключены')
 })
 
 bot.on('polling_error', (error: Error) => {
