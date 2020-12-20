@@ -35,7 +35,7 @@ const allChordList: string[] = [...chordMajorList, ...chordMinorList]
 
 export const getRandomChord = (
     chordList: string[],
-    getOctave: ((octaveList: string[]) => string) | null,
+    getOctave: ((chord: string) => string) | null,
 ): string => {
     const randomNumber: number = Math.round(Math.random() * (chordList.length - 1))
     const chord: string = chordList[randomNumber]
@@ -43,14 +43,15 @@ export const getRandomChord = (
     let result: string = chord
 
     if (getOctave) {
-        result = getOctave(octaveList) + '\n\n' + chord
+        result = getOctave(chord) + '\n\n' + chord
     }
 
     return result
 }
 
-export const getRandomOctave = (): string => {
-    const randomNumber: number = Math.round(Math.random() * (octaveList.length - 1))
+export const getRandomOctave = (chord: string): string => {
+    const maxOctaveIndex: number = /(G|A|B)/g.test(chord) ? 2 : 1
+    const randomNumber: number = Math.round(Math.random() * (octaveList.length - maxOctaveIndex))
     const octave: string = octaveList[randomNumber]
 
     return octave

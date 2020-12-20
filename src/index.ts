@@ -11,7 +11,7 @@ import {
 import { Enums } from './types'
 
 
-const token: string = '...'
+const token: string = ''
 const options: ConstructorOptions = {
     polling: true,
 }
